@@ -24,11 +24,9 @@
 
     <script>
         const peer = new Peer()
-        let myId
 
         peer.on('open', (id) => {
             document.querySelector('#myid').textContent = id
-            myId = Id
         })
 
         function handleConnection(conn) {
