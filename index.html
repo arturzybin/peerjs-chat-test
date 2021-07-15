@@ -76,6 +76,7 @@
 
 
         function answer() {
+            document.getElementById('callControls').classList.add('d-none')
             navigator.mediaDevices
                 .getUserMedia({ audio: true, video: true })
                 .then(mediaStream => {
