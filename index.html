@@ -61,7 +61,8 @@
                 // Send messages
                 conn.send('Hello!')
 
-                document.querySelector('#sendMessage').onsubmit = () => {
+                document.querySelector('#sendMessage').onsubmit = (event) => {
+                    event.preventDefault()
                     const input = document.querySelector('#message')
                     conn.send(input.value)
                     addMessage('You', input.value)
