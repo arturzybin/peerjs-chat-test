@@ -72,7 +72,8 @@
 
         peer.on('connection', conn => handleConnection(conn))
 
-        document.querySelector('#connect').onsubmit = () => {
+        document.querySelector('#connect').onsubmit = (event) => {
+            event.preventDefault()
             const destId = document.querySelector('#destId').value
             const conn = peer.connect(destId)
             handleConnection(conn)
