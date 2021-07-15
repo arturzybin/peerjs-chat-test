@@ -5,20 +5,38 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Peerjs chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 </head>
 
 <body>
-    <div id="myid"></div>
-    <hr>
-    <label for="destId">destination id</label>
-    <input type="text" name="Destination id" id="destId">
-    <button id="connect">connect</button>
-    <hr>
-    <label for="message">message</label>
-    <input type="text" name="message" id="message">
-    <button id="sendMessage">send message</button>
-    <hr>
+    <div class="container-sm mt-2" style="width: 600px;">
+        <div class="alert alert-info text-center" role="alert">
+            <a href="#" class="alert-link" id="copyId">Your id (click to copy): </a>
+            <span id="myid"></span>
+        </div>
+
+        <form class="d-flex justify-content-center" id="connect">
+            <div class="input-group">
+                <span class="input-group-text">Destination id</span>
+                <input type="text" aria-label="Destination id" class="form-control" id="destId">
+                <button class="btn btn-primary" type="submit">Connect</button>
+            </div>
+        </form>
+
+        <hr>
+        <form class="d-flex justify-content-center" id="sendMessage">
+            <div class="input-group">
+                <span class="input-group-text">Message</span>
+                <input type="text" aria-label="Destination id" class="form-control" id="message">
+                <button class="btn btn-primary">Send</button>
+            </div>
+        </form>
+        
+        <hr>
+        <ul class="list-group list-group-flush" id="messagesContainer"></ul>
+    </div>
 
     <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
 
@@ -27,31 +45,34 @@
 
         peer.on('open', (id) => {
             document.querySelector('#myid').textContent = id
+            document.querySelector('#copyId').onclick = () => navigator.clipboard.writeText(id)
         })
+
+        function addMessage(author, text) {
+            document.querySelector('#messagesContainer').insertAdjacentHTML('beforeend', `<li class="list-group-item d-flex justify-content-between align-items-start ${author === 'You' ? 'list-group-item-dark' : ''}">${text}<span class="badge bg-primary rounded-pill">${author}</span></li>`)
+        }
 
         function handleConnection(conn) {
             conn.on('open', () => {
+                document.querySelector('#messagesContainer').textContent = ''
                 // Receive messages
-                conn.on('data', (data) => {
-                    const el = document.createElement('div')
-                    el.textContent = data
-                    document.body.append(el)
-                    console.log('Received', data)
-                });
+                conn.on('data', (data) => addMessage('Him', data))
 
                 // Send messages
                 conn.send('Hello!')
 
-                document.querySelector('#sendMessage').onclick = () => {
-                    const message = document.querySelector('#message').value
-                    conn.send(message)
+                document.querySelector('#sendMessage').onsubmit = () => {
+                    const input = document.querySelector('#message')
+                    conn.send(input.value)
+                    addMessage('You', input.value)
+                    input.value = ''
                 }
-            });
+            })
         }
 
         peer.on('connection', conn => handleConnection(conn))
 
-        document.querySelector('#connect').onclick = () => {
+        document.querySelector('#connect').onsubmit = () => {
             const destId = document.querySelector('#destId').value
             const conn = peer.connect(destId)
             handleConnection(conn)
