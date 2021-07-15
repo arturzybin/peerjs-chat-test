@@ -17,27 +17,42 @@
             <span id="myid"></span>
         </div>
 
-        <form class="d-flex justify-content-center" id="call">
+        <form class="d-flex justify-content-center mb-3" id="call">
             <div class="input-group">
                 <span class="input-group-text">Destination id</span>
                 <input type="text" aria-label="Destination id" class="form-control" id="destId">
                 <button class="btn btn-primary" type="submit">Call</button>
             </div>
         </form>
+
+        <div id="callControls" class="input-group d-flex justify-content-center d-none mb-3">
+            <span class="input-group-text">Incoming call</span>
+            <button class="btn btn-primary" type="submit" id="answerCall" onclick="answer()">Answer</button>
+        </div>
     </div>
 
-    <video id=myVideo muted="muted" width="400px" height="auto"></video>
-    <div id=callinfo></div>
-    <video id=remVideo width="400px" height="auto"></video>
+    <div class="row justify-content-center">
+        <div class="col-auto">
+            <div class="card" style="width: 600px;">
+                <video id="myVideo" muted="muted" width="400px" height="auto" class="card-img-top"></video>
+                <div class="card-body">
+                    <h5 class="card-title">You</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-auto">
+            <div class="card" style="width: 600px;">
+                <video id="remVideo" muted="muted" width="400px" height="auto" class="card-img-top"></video>
+                <div class="card-body">
+                    <h5 class="card-title">Him</h5>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
 
     <script>
-        const oldConsoleLog = console.log
-        console.log = (...messages) => {
-            document.body.prepend(...messages)
-            oldConsoleLog(...messages)
-        }
         const peer = new Peer()
 
         peer.on('open', (id) => {
@@ -46,26 +61,27 @@
         })
 
 
-        let peercall
-        peer.on('call', call => {
-            peercall = call
-            document.getElementById('callinfo').innerHTML = "Входящий звонок <button onclick='callanswer()' >Принять</button><button onclick='callcancel()' >Отклонить</button>";
-        })
-
         document.querySelector('#call').onsubmit = (event) => {
             event.preventDefault()
             const destId = document.querySelector('#destId').value
-            callToNode(destId)
+            call(destId)
         }
 
-        function callanswer() {
+
+        let peercall
+        peer.on('call', call => {
+            peercall = call
+            document.getElementById('callControls').classList.remove('d-none')
+        })
+
+
+        function answer() {
             navigator.mediaDevices
                 .getUserMedia({ audio: true, video: true })
                 .then(mediaStream => {
                     const video = document.getElementById('myVideo')
                     peercall.answer(mediaStream)
                     video.srcObject = mediaStream
-                    document.getElementById('callinfo').innerHTML = "Звонок начат..."; //информируем, что звонок начат, и выводим кнопку Завершить
                     video.onloadedmetadata = () => video.play()
                     setTimeout(() => {
                         document.getElementById('remVideo').srcObject = peercall.remoteStream
@@ -76,20 +92,21 @@
                 .catch(err => console.log(err.name + ': ' + err.message))
         }
 
-        function callToNode(peerId) {
+
+        function call(peerId) {
             navigator.mediaDevices
                 .getUserMedia({ audio: true, video: true })
                 .then(mediaStream => {
                     const video = document.getElementById('myVideo')
-                    peercall = peer.call(peerId, mediaStream)
-                    peercall.on('stream', stream => {
+                    video.srcObject = mediaStream
+                    video.onloadedmetadata = () => video.play()
+                    mediaConnection = peer.call(peerId, mediaStream)
+                    mediaConnection.on('stream', stream => {
                         setTimeout(() => {
-                            document.getElementById('remVideo').srcObject = peercall.remoteStream
+                            document.getElementById('remVideo').srcObject = mediaConnection.remoteStream
                             document.getElementById('remVideo').onloadedmetadata = () => document.getElementById('remVideo').play()
                         }, 1500)
                     })
-                    video.srcObject = mediaStream
-                    video.onloadedmetadata = () => video.play()
                 })
                 .catch(err => console.log(err.name + ': ' + err.message))
         }
