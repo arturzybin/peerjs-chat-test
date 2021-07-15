@@ -52,7 +52,7 @@
             document.getElementById('callinfo').innerHTML = "Входящий звонок <button onclick='callanswer()' >Принять</button><button onclick='callcancel()' >Отклонить</button>";
         })
 
-        document.querySelector('#call button').onclick = (event) => {
+        document.querySelector('#call').onsubmit = (event) => {
             event.preventDefault()
             const destId = document.querySelector('#destId').value
             callToNode(destId)
